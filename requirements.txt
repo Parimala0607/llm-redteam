@@ -1,0 +1,11 @@
+# Core — no external deps required for Ollama or openai-compat targets
+# (uses stdlib urllib only)
+
+# Optional: HuggingFace local models
+# pip install transformers torch accelerate
+
+# Optional: faster async runs
+# pip install httpx
+
+# Dev / testing
+# pip install pytest

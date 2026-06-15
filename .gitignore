@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.redteam_cache.json
+results.json
+report.md
+# eval artifacts that may contain unredacted harmful completions:
+eval/gold_set.local.jsonl
+out/
+explain.md
+# Attack probes are proprietary — not distributed with the public repo
+attacks/
