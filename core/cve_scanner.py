@@ -68,7 +68,7 @@ def _query_osv_batch(pkg_map: dict) -> dict:
             if i < len(names)
         }
     except Exception:
-        # Batch failed — fall back to concurrent single queries
+        # Fall back to single queries if the batch call fails.
         return {}
 
 
@@ -170,13 +170,13 @@ def scan(
     import time
     t0 = time.time()
 
-    # Try batch first (single HTTP call)
+    # Try the batch API first.
     batch_results = _query_osv_batch(pkg_map)
 
     findings: List[CVEFinding] = []
 
     if batch_results:
-        # Batch succeeded
+        # Batch request worked.
         for name, version in pkg_map.items():
             vulns = batch_results.get(name, [])
             pkg_findings = _build_findings(name, version, vulns)
@@ -186,7 +186,7 @@ def scan(
                     cve = next((a for a in f.aliases if a.startswith("CVE-")), f.vuln_id)
                     print(f"  [{f.severity:<8}] {name}=={version} → {cve}")
     else:
-        # Fallback: concurrent single queries
+        # Fall back to concurrent single queries.
         if verbose:
             print(f"[cve] Batch API unavailable — using {concurrency} concurrent queries...")
 

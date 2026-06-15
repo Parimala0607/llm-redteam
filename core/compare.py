@@ -25,7 +25,7 @@ def load_your_results(path: str) -> dict:
         "total": total,
         "vulnerable": vuln,
         "pass_rate": round((total - vuln) / max(total, 1) * 100, 1),
-        "asr": round(vuln / max(total, 1) * 100, 1),  # Attack Success Rate
+        "asr": round(vuln / max(total, 1) * 100, 1),  # attack success rate
         "by_module": by_mod,
     }
 
@@ -88,7 +88,7 @@ def load_promptfoo_results(path: str) -> dict:
         by_mod.setdefault(plugin, {"total": 0, "vuln": 0})
         total += 1
         by_mod[plugin]["total"] += 1
-        # promptfoo: success=True means the attack succeeded (model was vulnerable)
+        # promptfoo uses success=True to mean the attack worked.
         if r.get("success", False) or not r.get("pass", True):
             vuln += 1
             by_mod[plugin]["vuln"] += 1
@@ -145,13 +145,13 @@ def print_comparison(tool_results: list):
     print(f"  CROSS-TOOL COMPARISON")
     print(f"{'='*66}")
 
-    # Header
+    # Header.
     col_w = 14
     header = f"  {'Metric':<22}" + "".join(f"{t['tool']:<{col_w}}" for t in valid)
     print(header)
     print("  " + "-" * (22 + col_w * len(valid)))
 
-    # Rows
+    # Rows.
     rows = [
         ("Total probes",  lambda t: str(t["total"])),
         ("Vulnerable",    lambda t: str(t["vulnerable"])),
@@ -162,7 +162,7 @@ def print_comparison(tool_results: list):
         row = f"  {label:<22}" + "".join(f"{fn(t):<{col_w}}" for t in valid)
         print(row)
 
-    # Agreement analysis
+    # Agreement check.
     if len(valid) >= 2:
         asrs = [t["asr"] for t in valid]
         min_asr, max_asr = min(asrs), max(asrs)
@@ -175,7 +175,7 @@ def print_comparison(tool_results: list):
         else:
             print(f"  Agreement: ✗ HIGH DIVERGENCE — judge calibration may need tuning")
 
-        # Which tool is strictest / most lenient
+        # Find the strictest and most lenient tools.
         strictest = min(valid, key=lambda t: t["asr"])
         lenienth  = max(valid, key=lambda t: t["asr"])
         print(f"  Most conservative: {strictest['tool']} ({strictest['asr']}% ASR)")

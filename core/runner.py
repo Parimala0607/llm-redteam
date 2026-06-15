@@ -21,7 +21,7 @@ class Runner:
         reporters: List,
         verbose: bool = False,
         llm_judge_model: Optional[str] = None,
-        dynamic_modules: Optional[Dict] = None,  # external dataset instances
+        dynamic_modules: Optional[Dict] = None,  # external dataset objects
     ):
         self.target = target
         self.attack_names = attack_names
@@ -33,10 +33,10 @@ class Runner:
         self.all_results: List[Result] = []
 
     def _get_module(self, name: str):
-        """Return an instantiated attack module by name."""
+        """Return an attack module instance by name."""
         if name in self.dynamic_modules:
-            return self.dynamic_modules[name]   # already instantiated
-        return ATTACK_REGISTRY[name]()           # instantiate built-in
+            return self.dynamic_modules[name]   # already loaded
+        return ATTACK_REGISTRY[name]()           # load a built-in module
 
     def run(self):
         judge_label = f"rule-based + LLM ({self.llm_judge.model})" if self.llm_judge else "rule-based"
@@ -51,7 +51,7 @@ class Runner:
         print(f"  Judge   : {judge_label}")
         print(f"{'='*64}\n")
 
-        # Run built-in modules first, then external datasets
+        # Run built-in modules first, then external datasets.
         for name in self.attack_names:
             self._run_module(name, self._get_module(name))
 
@@ -136,7 +136,7 @@ class Runner:
             print(f"\n  ⚠  {len(medium)} MEDIUM + {len(low)} LOW confidence results.")
             print(f"     Re-run with --llm-judge llama3 for better accuracy.")
 
-        # Cross-verification comparison if external datasets ran
+        # Compare built-in and external datasets when both are present.
         builtin_results  = [r for r in self.all_results if r.attack_module in ATTACK_REGISTRY]
         external_results = [r for r in self.all_results if r.attack_module not in ATTACK_REGISTRY]
 

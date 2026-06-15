@@ -1,10 +1,10 @@
 # LLM Red Teaming CLI
 
-Use this CLI to probe open-source LLMs for safety issues and measure how they respond to risky prompts.
+Use this CLI to probe open-source LLMs for safety issues and see how they handle risky prompts.
 
 ## Quick Start
 
-### 1. Install Ollama for the easiest local setup
+### 1. Install Ollama for the quickest local setup
 
 ```bash
 # macOS / Linux
@@ -23,7 +23,7 @@ ollama serve
 ### 2. Run a red-team session
 
 ```bash
-# Clone or download this project
+# Clone or download the repo
 cd llm-redteam
 
 # Run all attack modules against llama3
@@ -35,25 +35,25 @@ python cli.py run --target ollama/mistral --attacks jailbreak,harmful
 # Save the results
 python cli.py run --target ollama/llama3 --output-json results.json --output-md report.md
 
-# Update the report while the run is still in progress
+# Keep the report updated while the run is still going
 python cli.py run --target ollama/llama3 --output-md report.md --output-json results.json --live-report
 
-# Verbose mode (see each probe + response)
+# Verbose mode, so you can see each probe and response
 python cli.py run --target ollama/llama3 -v
 
-# Limit probes per module (fast test)
+# Limit probes per module for a quick test
 python cli.py run --target ollama/llama3 --max-probes 3
 
 # List available attack modules
 python cli.py list
 ```
 
-> **Note — Attack Probes Are Private**
+> **Note - Attack Probes Are Private**
 > This public repo includes the runner, judge, reporters, and target adapters.
-> I keep the `attacks/` folder private on purpose so people can’t reuse the probes to game results or misuse the corpus.
-> If you want access to the private attack pack for legitimate research or evaluation, open an issue and tell me what you’re testing. I’ll review the request and decide whether to share access later.
+> I keep the `attacks/` folder private on purpose, so people can't reuse the probes to game results or misuse the corpus.
+> If you want access to the private attack pack for legitimate research or evaluation, open an issue and tell me what you're testing. I'll take a look and decide whether to share access later.
 
-## Attack Modules
+## What It Tests
 
 | Module        | What it tests                                          |
 |---------------|-------------------------------------------------------|
@@ -70,9 +70,9 @@ python cli.py list
 
 These are the built-in attack families. The actual probe prompts stay in the private `attacks/` pack.
 
-## External Datasets
+## Extra Benchmarks
 
-You can also cross-check against external benchmark sets:
+You can also cross-check against a few external benchmark sets:
 
 - `--harmbench <csv>` for HarmBench
 - `--jailbreakbench <json>` for JailbreakBench
@@ -95,13 +95,13 @@ python cli.py run --target hf/google/gemma-2-9b-it
 python cli.py run --target openai-compat/my-model --base-url http://localhost:1234
 ```
 
-## Output
+## What You Get
 
 The CLI prints results to the console and can also save them to:
 - `results.json` — full machine-readable results
 - `report.md` — human-readable Markdown report
 
-## Project Structure
+## What's in the Repo
 
 ```
 llm-redteam/
@@ -144,7 +144,7 @@ Then run it:
 python cli.py run --target ollama/llama3 --attacks my_attack
 ```
 
-## Requirements
+## You'll Need
 
 - Python 3.8+
 - No external dependencies for Ollama or OpenAI-compatible targets

@@ -27,7 +27,7 @@ class AsyncRunner:
         verbose: bool = False,
         llm_judge_model: Optional[str] = None,
         dynamic_modules: Optional[Dict] = None,
-        concurrency: int = 1,  # default 1 for CPU Ollama; increase if GPU
+        concurrency: int = 1,  # keep this low for CPU-only runs
         use_cache: bool = True,
     ):
         self.target = target
@@ -48,12 +48,12 @@ class AsyncRunner:
         return ATTACK_REGISTRY[name]()
 
     def _run_probe(self, probe_obj: dict, name: str) -> Result:
-        """Run a single probe — called concurrently."""
+        """Run one probe."""
         probe_text = probe_obj["text"]
         system     = probe_obj.get("system")
         category   = probe_obj.get("category", name)
 
-        # Cache check
+        # Check the cache first.
         if self.cache:
             cached = self.cache.get(
                 probe_text,
@@ -77,11 +77,11 @@ class AsyncRunner:
                 attack_module=name,
             )
 
-        # LLM judge escalation
+        # Escalate to the LLM judge when needed.
         if self.llm_judge and result.confidence != "HIGH":
             result = self.llm_judge.recheck(result)
 
-        # Cache store
+        # Save the result back to the cache.
         if self.cache:
             self.cache.set(probe_text, str(self.target), result)
 
@@ -137,7 +137,7 @@ class AsyncRunner:
                     if self.verbose:
                         print(f"  [{done:02d}/{len(probes)}] {status} score={result.score:.2f} conf={result.confidence}{cached}")
                     else:
-                        # Always show basic progress so user knows it's not frozen
+                        # Show progress so the run doesn't look stalled.
                         print(f"  [{done:02d}/{len(probes)}] {status}{cached}", end="\r", flush=True)
                 except Exception as e:
                     print(f"  [error] {e}")
@@ -173,7 +173,7 @@ class AsyncRunner:
             print(f"\n  ⚠  {len(medium)} MEDIUM + {len(low)} LOW confidence results.")
             print(f"     Re-run with --llm-judge llama3 for better accuracy.")
 
-        # Cross-verification
+        # Compare built-in and external datasets.
         builtin_r  = [r for r in self.all_results if r.attack_module in ATTACK_REGISTRY]
         external_r = [r for r in self.all_results if r.attack_module not in ATTACK_REGISTRY]
         if builtin_r and external_r:

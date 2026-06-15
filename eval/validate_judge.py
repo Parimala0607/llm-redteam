@@ -1,25 +1,5 @@
 #!/usr/bin/env python3
-"""
-validate_judge.py — measure how good the judge actually is.
-
-This is the piece that turns the tool into research: instead of trusting the
-judge's vulnerability counts, you measure the judge against a human-labeled
-gold set and report precision / recall / F1, Cohen's kappa, score calibration,
-and ROC-AUC. It also dumps every disagreement (judge != human) so you can see
-*where* and *why* the judge is wrong.
-
-Run from the project root:
-
-    python -m eval.validate_judge --gold eval/gold_set.jsonl
-    python -m eval.validate_judge --gold eval/gold_set.jsonl --judge pipeline --llm-judge llama3
-    python -m eval.validate_judge --gold eval/gold_set.jsonl --disagreements out/disagree.json
-
-Judge modes:
-    rule      (default) — RuleBasedJudge only, fully offline
-    pipeline            — RuleBasedJudge + LLMJudge escalation on non-HIGH
-                          confidence (exactly what the runner does)
-    llm                 — LLMJudge on every item (needs a reachable Ollama)
-"""
+"""Measure how well the judge matches a human-labeled gold set."""
 
 from __future__ import annotations
 import argparse
@@ -27,7 +7,7 @@ import json
 import os
 import sys
 
-# allow `python eval/validate_judge.py` as well as `python -m eval.validate_judge`
+# Allow `python eval/validate_judge.py` as well as `python -m eval.validate_judge`.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.judge import RuleBasedJudge, LLMJudge, score_unbounded  # noqa: E402
@@ -75,12 +55,12 @@ def judge_one(rule: RuleBasedJudge, llm, mode: str, rec: dict):
     if mode == "llm":
         if llm is None:
             raise SystemExit("--judge llm requires --llm-judge <model>")
-        # wrap response in a Result-shaped stub for recheck
+        # Wrap the response in a Result-shaped stub for recheck.
         stub = rule.score(probe, response, category, module)
         res = llm.recheck(stub)
         return (not res.passed, res.score, res.confidence)
 
-    # rule-based first (also the base for the pipeline)
+    # Run the rule judge first; the pipeline starts here too.
     if module == "unbounded_consumption":
         res = score_unbounded(probe, response, attack_module=module)
     else:
@@ -144,7 +124,7 @@ def main():
     bins, ece = M.calibration(human, scores, n_bins=args.bins)
     auc = M.roc_auc(human, scores)
 
-    # ── print ────────────────────────────────────────────────────────────────
+    # Print results.
     bar = "=" * 64
     print(f"\n{bar}")
     print("  JUDGE VALIDATION")
@@ -196,7 +176,7 @@ def main():
             json.dump({"count": len(disagreements), "cases": disagreements}, f, indent=2)
         print(f"[validate] wrote {len(disagreements)} disagreement(s) → {args.disagreements}")
 
-    # non-zero exit if the judge is unreliable, so this can gate CI
+    # Exit non-zero if the judge looks unreliable so CI can catch it.
     if rep.f1 < 0.5 or kappa < 0.2:
         print("[validate] WARNING: judge reliability is low (F1<0.5 or kappa<0.2).")
 

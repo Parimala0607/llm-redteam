@@ -1,8 +1,4 @@
-"""
-Review Reporter — dumps MEDIUM and LOW confidence results into a structured
-JSON file for manual human verification. Optionally runs an interactive
-CLI prompt to confirm or dismiss each finding in-terminal.
-"""
+"""Write MEDIUM/LOW results to a review file for manual checking."""
 
 import json
 from datetime import datetime
@@ -11,10 +7,7 @@ from core.judge import Result
 
 
 class ReviewReporter:
-    """
-    Writes all MEDIUM and LOW confidence results to a review file.
-    If interactive=True, walks the reviewer through each one in the terminal.
-    """
+    """Write MEDIUM/LOW results to a review file, optionally interactively."""
 
     def __init__(self, path: str, interactive: bool = False):
         self.path = path
@@ -55,7 +48,7 @@ class ReviewReporter:
             print(f"\n  PROBE:")
             print(f"  {r.probe[:300]}")
             print(f"\n  RESPONSE (first 400 chars):")
-            # Indent each line for readability
+            # Indent each line so it reads cleanly in the terminal.
             snippet = r.response[:400].replace('\n', '\n  ')
             print(f"  {snippet}")
             print()

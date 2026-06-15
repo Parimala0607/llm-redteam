@@ -1,18 +1,11 @@
-"""
-metrics.py — pure-stdlib classification & agreement metrics for judge validation.
-
-No numpy / sklearn dependency (keeps the project dependency-free, matching the
-rest of the tool). Positive class is ALWAYS "vulnerable" — i.e. the thing we are
-trying to detect. A false positive = judge cried "vulnerable" on a safe response;
-a false negative = judge missed a real vulnerability.
-"""
+"""Pure-stdlib metrics for judge validation."""
 
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List, Tuple, Dict
 
 
-# ── Confusion matrix + P/R/F1 ─────────────────────────────────────────────────
+# Confusion matrix and P/R/F1.
 
 @dataclass
 class BinaryReport:
@@ -46,13 +39,13 @@ class BinaryReport:
 
     @property
     def fpr(self) -> float:
-        """False positive rate — how often safe responses get flagged."""
+        """False positive rate: how often safe responses get flagged."""
         d = self.fp + self.tn
         return self.fp / d if d else 0.0
 
 
 def binary_report(human: List[bool], judge: List[bool]) -> BinaryReport:
-    """`human`/`judge` are lists of bool where True == 'vulnerable'."""
+    """`human` and `judge` are bool lists where True means vulnerable."""
     assert len(human) == len(judge), "label lists must be the same length"
     r = BinaryReport()
     for h, j in zip(human, judge):
@@ -67,7 +60,7 @@ def binary_report(human: List[bool], judge: List[bool]) -> BinaryReport:
     return r
 
 
-# ── Cohen's kappa (inter-rater agreement) ─────────────────────────────────────
+# Cohen's kappa.
 
 def cohens_kappa(a: List[bool], b: List[bool]) -> float:
     """
@@ -98,26 +91,20 @@ def kappa_label(k: float) -> str:
     return "almost perfect"
 
 
-# ── Score calibration (the judge emits a 0..1 score, not just a bool) ─────────
+# Score calibration.
 
 @dataclass
 class CalibrationBin:
     lo: float
     hi: float
     count: int = 0
-    mean_score: float = 0.0       # mean judge score in this bin
-    observed_vuln: float = 0.0    # fraction actually vulnerable per humans
+    mean_score: float = 0.0       # Mean judge score in this bin.
+    observed_vuln: float = 0.0    # Human vulnerability rate in this bin.
 
 
 def calibration(human: List[bool], scores: List[float], n_bins: int = 5
                 ) -> Tuple[List[CalibrationBin], float]:
-    """
-    Buckets judge scores and compares mean predicted score against the observed
-    fraction of human-confirmed vulnerabilities. Returns (bins, ECE).
-
-    ECE (Expected Calibration Error) = weighted mean |mean_score - observed|.
-    Low ECE means the judge's score behaves like a probability.
-    """
+    """Bucket scores and compare them with the human vulnerability rate."""
     assert len(human) == len(scores)
     edges = [i / n_bins for i in range(n_bins + 1)]
     bins = [CalibrationBin(edges[i], edges[i + 1]) for i in range(n_bins)]
@@ -139,21 +126,17 @@ def calibration(human: List[bool], scores: List[float], n_bins: int = 5
     return bins, ece
 
 
-# ── ROC AUC via Mann–Whitney U (rank-based, handles ties) ─────────────────────
+# ROC AUC via Mann-Whitney U.
 
 def roc_auc(human: List[bool], scores: List[float]) -> float:
-    """
-    Probability that a randomly chosen vulnerable item is scored higher than a
-    randomly chosen safe item. 0.5 = random, 1.0 = perfect separation.
-    Tie-aware (average ranks).
-    """
+    """Probability that a vulnerable item scores higher than a safe one."""
     pos = [s for h, s in zip(human, scores) if h]
     neg = [s for h, s in zip(human, scores) if not h]
     n_pos, n_neg = len(pos), len(neg)
     if n_pos == 0 or n_neg == 0:
         return float("nan")
 
-    # average-rank assignment across the pooled sample
+    # Assign average ranks across the pooled sample.
     pooled = sorted([(s, 1) for s in pos] + [(s, 0) for s in neg],
                     key=lambda x: x[0])
     ranks = [0.0] * len(pooled)
@@ -162,7 +145,7 @@ def roc_auc(human: List[bool], scores: List[float]) -> float:
         j = i
         while j + 1 < len(pooled) and pooled[j + 1][0] == pooled[i][0]:
             j += 1
-        avg_rank = (i + j) / 2 + 1  # ranks are 1-indexed
+        avg_rank = (i + j) / 2 + 1  # Ranks are 1-indexed.
         for k in range(i, j + 1):
             ranks[k] = avg_rank
         i = j + 1

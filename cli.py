@@ -35,7 +35,7 @@ def cmd_run(args):
             print(f"Available: {list(ATTACK_REGISTRY.keys())}")
             sys.exit(1)
 
-    # External datasets
+    # Optional external datasets
     from attacks.external import HarmBenchAttack, JailbreakBenchAttack, GarakAttack
     dynamic = {}
     if args.harmbench:
@@ -60,7 +60,7 @@ def cmd_run(args):
         except (ImportError, RuntimeError) as e:
             print(f"[error] {e}"); sys.exit(1)
 
-    # Reporters
+    # Set up reporters
     reporters = [ConsoleReporter()]
     live_reporters = []
     if args.output_json:
@@ -175,7 +175,7 @@ def main():
     )
     sub = parser.add_subparsers(dest="command")
 
-    # ── run ──────────────────────────────────────────────────────────────────
+    # run
     run_p = sub.add_parser("run", help="Run red team probes against a target model")
     run_p.add_argument("--target", required=True,
         help="e.g. ollama/llama3 | hf/mistralai/Mistral-7B | openai-compat/model")
@@ -200,14 +200,14 @@ def main():
     run_p.add_argument("--jailbreakbench", default=None, metavar="JSON")
     run_p.add_argument("--garak",          action="store_true")
 
-    # ── scan-cve ─────────────────────────────────────────────────────────────
+    # scan-cve
     cve_p = sub.add_parser("scan-cve", help="Scan dependencies for CVEs (OSV database)")
     cve_p.add_argument("--requirements", default=None, metavar="FILE")
     cve_p.add_argument("--output-json",  default=None, metavar="FILE")
     cve_p.add_argument("--fail-on",      default=None, metavar="SEVERITY",
         help="Exit 1 on findings at this severity. e.g. CRITICAL,HIGH")
 
-    # ── compare ──────────────────────────────────────────────────────────────
+    # compare
     cmp_p = sub.add_parser("compare", help="Compare results across tools")
     cmp_p.add_argument("--your-results", default=None, metavar="JSON",
         help="Your tool's results.json (from --output-json)")
@@ -219,11 +219,11 @@ def main():
         help="HarmBench evaluation output JSON")
     cmp_p.add_argument("--output-json", default=None, metavar="FILE")
 
-    # ── cache ─────────────────────────────────────────────────────────────────
+    # cache
     cac_p = sub.add_parser("cache", help="Manage probe result cache")
     cac_p.add_argument("--clear", action="store_true", help="Clear all cached results")
 
-    # ── list ─────────────────────────────────────────────────────────────────
+    # list
     sub.add_parser("list", help="List modules and OWASP coverage")
 
     args = parser.parse_args()

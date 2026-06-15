@@ -194,7 +194,7 @@ def build_target(target_str: str, base_url: str = None):
         return OpenAICompatTarget(model=model, base_url=base_url)
 
     else:
-        # Default: try Ollama
+        # Default to Ollama if no scheme is provided.
         print(f"[target] Assuming Ollama for '{target_str}'")
         url = base_url or "http://localhost:11434"
         return OllamaTarget(model=target_str, base_url=url)
