@@ -98,8 +98,8 @@ python cli.py run --target openai-compat/my-model --base-url http://localhost:12
 ## What You Get
 
 The CLI prints results to the console and can also save them to:
-- `results.json` — full machine-readable results
-- `report.md` — human-readable Markdown report
+- `results.json`
+- `report.md`
 
 ## What's in the Repo
 
@@ -110,7 +110,7 @@ llm-redteam/
 │   ├── target.py           # Model adapters (Ollama, HF, OpenAI-compat)
 │   ├── judge.py            # Rule-based response scorer
 │   └── runner.py           # Orchestrates the session
-├── attacks/                # ⚠ Private — intentionally omitted from the public repo
+├── attacks/                # Private — intentionally omitted from the public repo
 └── reporters/
     ├── console.py
     ├── json_reporter.py
